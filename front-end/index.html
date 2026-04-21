@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front-end com API</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+
+                <v-btn color="primary" class="mb-4" @click="goToCreate">Novo Produto</v-btn>
+                
+                <h1 class="text-h4 mb-4">Lista de Usuários</h1>
+
+                <v-progress-circular
+                    v-if="loading"
+                    indeterminate
+                    color="primary"
+                ></v-progress-circular>
+
+                <v-alert v-else-if="error" type="error">
+                    {{ error }}
+                </v-alert>
+
+                <v-row v-else>
+                    <v-col cols="12" md="6" v-for="user in users" :key="user.id">
+                        <!-- Card clicável -->
+                        <v-card @click="goToUser(user.id)" style="cursor: pointer;" hover>
+                            <v-card-title>{{ user.name }}</v-card-title>
+                            <v-card-text>
+                                Email: {{ user.email }} <br>
+                                CPF: {{ user.cpf }}
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+                
+            </v-container>
+            
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.js"></script>
+    <script src="src/app.js"></script>
+</body>
+</html>
