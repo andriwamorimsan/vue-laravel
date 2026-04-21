@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Cadastrar Produto</title>
+    <title>Cadastrar Usuário</title>
 
     <style>
         body {
@@ -11,7 +11,7 @@
             margin: 40px auto;
         }
 
-        input, textarea {
+        input {
             width: 100%;
             padding: 8px;
             margin-bottom: 10px;
@@ -22,37 +22,34 @@
             cursor: pointer;
         }
 
-        .error {
-            color: red;
-        }
-
-        .success {
-            color: green;
-        }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 
 <body>
 
 <div id="app">
-    <h1>Cadastrar Produto</h1>
+
+    <h1>Cadastrar Usuário</h1>
 
     <button @click="goBack">Voltar</button>
 
     <br><br>
 
-    <input v-model="form.nome" placeholder="Nome do produto" />
+    <input v-model="form.name" placeholder="Nome" />
 
-    <input v-model="form.preco" type="number" placeholder="Preço" />
+    <input v-model="form.email" placeholder="Email" />
 
-    <input v-model="form.user_id" placeholder="ID do usuário" />
+    <input v-model="form.cpf" placeholder="CPF" />
 
-    <textarea v-model="form.descricao" placeholder="Descrição"></textarea>
+    <input v-model="form.password" type="password" placeholder="Senha" />
 
-    <button @click="createProduct">Salvar</button>
+    <button @click="createUser">Salvar</button>
 
     <p v-if="error" class="error">{{ error }}</p>
-    <p v-if="success" class="success">Produto cadastrado com sucesso!</p>
+    <p v-if="success" class="success">Usuário cadastrado com sucesso!</p>
+
 </div>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -63,10 +60,10 @@ const App = {
     data() {
         return {
             form: {
-                nome: '',
-                preco: '',
-                user_id: '',
-                descricao: ''
+                name: '',
+                email: '',
+                cpf: '',
+                password: ''
             },
             error: null,
             success: false
@@ -74,30 +71,31 @@ const App = {
     },
 
     methods: {
-        async createProduct() {
+
+        async createUser() {
             this.error = null;
             this.success = false;
 
             try {
-                await axios.post('http://127.0.0.1:8000/api/produtos', {
-                    nome: this.form.nome,
-                    preco: parseFloat(this.form.preco),
-                    user_id: this.form.user_id,
-                    descricao: this.form.descricao
+                await axios.post('http://127.0.0.1:8000/api/users', {
+                    name: this.form.name,
+                    email: this.form.email,
+                    cpf: this.form.cpf,
+                    password: this.form.password
                 });
 
                 this.success = true;
 
                 this.form = {
-                    nome: '',
-                    preco: '',
-                    user_id: '',
-                    descricao: ''
+                    name: '',
+                    email: '',
+                    cpf: '',
+                    password: ''
                 };
 
             } catch (err) {
                 console.error(err);
-                this.error = 'Erro ao cadastrar produto';
+                this.error = 'Erro ao cadastrar usuário';
             }
         },
 

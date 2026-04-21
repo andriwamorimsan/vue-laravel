@@ -72,6 +72,9 @@ const MyNameApp = {
          goToCreate() {
          window.location.href = "formulario.html";
 }       ,
+        goToCreateUser() {
+            window.location.href = "formulario_usuario.html";
+        },
         // 🔄 RESET FORM
         resetForm() {
             this.form = {

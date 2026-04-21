@@ -2,163 +2,194 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Usuário e Produto</title>
-    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.css" rel="stylesheet">
+    <title>Editar Usuário</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 700px;
+            margin: 40px auto;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background: #f5f5f5;
+        }
+
+        .error { color: red; }
+        .success { color: green; }
+    </style>
 </head>
+
 <body>
-    <div id="app">
-        <v-app>
-            <v-container>
-                <!-- Botão para voltar -->
-                <v-btn class="mb-4" prepend-icon="mdi-arrow-left" @click="goBack">
-                    Voltar para lista
-                </v-btn>
 
-                <h1 class="text-h4 mb-4">Detalhes do Produto</h1>
+<div id="app">
 
-                <!-- Loading -->
-                <v-progress-circular
-                    v-if="loading"
-                    indeterminate
-                    color="primary"
-                ></v-progress-circular>
+    <h1>Editar Usuário</h1>
+    <button @click="goBack">Voltar</button>
+    <br><br>
+    <div v-if="loading">Carregando...</div>
 
-                <!-- Erro -->
-                <v-alert v-else-if="error" type="error">
-                    {{ error }}
-                </v-alert>
+    <div v-else>
 
-                <!-- Conteúdo carregado -->
-                <v-row v-else>
-                    <v-col cols="12" md="8" offset-md="2">
-                        <v-card>
-                            <v-card-title class="text-h5">Produto: {{ produto.nome }}</v-card-title>
-                            <v-card-subtitle>ID: {{ produto.id }}</v-card-subtitle>
-                            <v-card-text>
-                                <v-list>
-                                    <v-list-item>
-                                        <strong>Preço:</strong> R$ {{ produto.preco }}
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <strong>Descrição:</strong> {{ produto.descricao || 'Sem descrição' }}
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <strong>Criado em:</strong> {{ formatDate(produto.created_at) }}
-                                    </v-list-item>
-                                </v-list>
+        <input v-model="form.name" placeholder="Nome" />
+        <input v-model="form.email" placeholder="Email" />
+        <input v-model="form.cpf" placeholder="CPF" />
+        <input v-model="form.password" type="password" placeholder="Nova senha (opcional)" />
+        <button @click="updateUser">Atualizar Usuário</button>
 
-                                <v-divider class="my-4"></v-divider>
+        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="success" class="success">Usuário atualizado!</p>
 
-                                <h2 class="text-h6 mb-2">Dados do Usuário (dono do produto)</h2>
-                                <v-list v-if="produto.user">
-                                    <v-list-item>
-                                        <strong>Nome:</strong> {{ produto.user.name }}
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <strong>Email:</strong> {{ produto.user.email }}
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <strong>CPF:</strong> {{ produto.user.cpf }}
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <strong>Cadastrado em:</strong> {{ formatDate(produto.user.created_at) }}
-                                    </v-list-item>
-                                </v-list>
-                                <v-alert v-else type="info">Nenhum usuário associado a este produto.</v-alert>
-                            </v-card-text>
-                        </v-card>
-                    </v-col>
-                </v-row>
-            </v-container>
-        </v-app>
+        <h2 style="margin-top:30px;">Produtos do Usuário</h2>
+
+        <div v-if="products.length === 0">
+            Nenhum produto encontrado.
+        </div>
+
+        <table v-else>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr v-for="p in products" :key="p.id">
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.nome }}</td>
+                    <td>{{ p.preco }}</td>
+                    <td>{{ p.descricao }}</td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.js"></script>
+</div>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-    <script>
-        const UserDetailApp = {
-            data() {
-                return {
-                    produto: {
-                        user: null
-                    },
-                    loading: false,
-                    error: null,
-                    userId: null
-                }
+<script>
+const App = {
+    data() {
+        return {
+            userId: null,
+            loading: false,
+            error: null,
+            success: false,
+
+            form: {
+                name: '',
+                email: '',
+                cpf: '',
+                password: ''
             },
 
-            mounted() {
-                // Obtém o parâmetro user_id da URL
-                const params = new URLSearchParams(window.location.search);
-                this.userId = params.get('user_id');
+            products: [] 
+        }
+    },
 
-                if (!this.userId) {
-                    this.error = 'ID do usuário não informado na URL.';
-                    return;
-                }
+    mounted() {
+        const params = new URLSearchParams(window.location.search);
+        this.userId = params.get('user_id');
 
-                this.fetchProdutoPorUsuario();
-            },
+        if (!this.userId) {
+            this.error = 'ID não informado';
+            return;
+        }
 
-            methods: {
-                async fetchProdutoPorUsuario() {
-                    this.loading = true;
-                    this.error = null;
+        this.fetchUser();
+        this.fetchProducts();
+    },
 
-                    try {
-       
-                        this.produto = {
-                            id: 1,
-                            nome: "prod1",
-                            preco: "1.10",
-                            descricao: null,
-                            user_id: parseInt(this.userId),
-                            created_at: "2026-04-21T10:31:46.000000Z",
-                            updated_at: "2026-04-21T10:31:46.000000Z",
-                            user: {
-                                id: parseInt(this.userId),
-                                name: "Sabrina Rippin",
-                                cpf: "11632549921",
-                                email: "mitchell.abe@example.com",
-                                email_verified_at: "2026-04-21T09:52:15.000000Z",
-                                created_at: "2026-04-21T09:52:15.000000Z",
-                                updated_at: "2026-04-21T09:52:15.000000Z"
-                            }
-                        };
- 
+    methods: {
 
-                    } catch (err) {
-                        console.error(err);
-                        this.error = 'Erro ao carregar os dados do produto.';
-                    } finally {
-                        this.loading = false;
-                    }
-                },
+        async fetchUser() {
+            this.loading = true;
 
-                formatDate(isoString) {
-                    if (!isoString) return '';
-                    const date = new Date(isoString);
-                    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
-                },
+            try {
+                const res = await axios.get(
+                    `http://127.0.0.1:8000/api/users/${this.userId}`
+                );
 
-                goBack() {
-                    window.location.href = 'index.html';
-                }
+                this.form = {
+                    name: res.data.name,
+                    email: res.data.email,
+                    cpf: res.data.cpf,
+                    password: ''
+                };
+
+            } catch (err) {
+                console.error(err);
+                this.error = 'Erro ao carregar usuário';
+            } finally {
+                this.loading = false;
             }
-        };
+        },
 
-        const { createApp } = Vue;
-        const { createVuetify } = Vuetify;
+        async fetchProducts() {
+            try {
+                const res = await axios.get(
+                    `http://127.0.0.1:8000/api/produtos/${this.userId}`
+                );
 
-        const app = createApp(UserDetailApp);
-        const vuetify = createVuetify();
+                // pode vir objeto ou array dependendo da API
+                this.products = Array.isArray(res.data)
+                    ? res.data
+                    : [res.data];
 
-        app.use(vuetify);
-        app.mount('#app');
-    </script>
+            } catch (err) {
+                console.error(err);
+                this.products = [];
+            }
+        },
+
+        async updateUser() {
+            this.error = null;
+            this.success = false;
+
+            try {
+                await axios.put(
+                    `http://127.0.0.1:8000/api/users/${this.userId}`,
+                    this.form
+                );
+
+                this.success = true;
+
+            } catch (err) {
+                console.error(err);
+                this.error = 'Erro ao atualizar usuário';
+            }
+        },
+
+        goBack() {
+            window.location.href = "index.html";
+        }
+    }
+};
+
+Vue.createApp(App).mount('#app');
+</script>
+
 </body>
 </html>
