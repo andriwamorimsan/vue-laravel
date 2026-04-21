@@ -70,9 +70,8 @@ const MyNameApp = {
         },
 
          goToCreate() {
-            this.view = 'create';
-            this.resetForm();
-        },
+         window.location.href = "formulario.html";
+}       ,
         // 🔄 RESET FORM
         resetForm() {
             this.form = {

@@ -1,138 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
-    <title>App Vue + API</title>
+    <title>Cadastrar Produto</title>
 
-    <!-- Vuetify -->
-    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
 </head>
 
 <body>
 
 <div id="app">
-    <v-app>
-        <v-container>
+    <h1>Cadastrar Produto</h1>
 
-            <!-- 🔵 LISTA -->
-            <div v-if="view === 'list'">
+    <button @click="goBack">Voltar</button>
 
-                <h1 class="text-h4 mb-4">Usuários</h1>
+    <br><br>
 
-                <!-- botão criar -->
-                <v-btn color="primary" class="mb-4" @click="goToCreate">
-                    Novo Produto
-                </v-btn>
+    <input v-model="form.nome" placeholder="Nome do produto" />
 
-                <v-progress-circular v-if="loading" indeterminate />
+    <input v-model="form.preco" type="number" placeholder="Preço" />
 
-                <v-alert v-else-if="error" type="error">
-                    {{ error }}
-                </v-alert>
+    <input v-model="form.user_id" placeholder="ID do usuário" />
 
-                <v-row v-else>
-                    <v-col cols="12" md="6" v-for="user in users" :key="user.id">
-                        <v-card
-                            class="pa-3"
-                            style="cursor:pointer"
-                            @click="openUserProducts(user.id)"
-                        >
-                            <v-card-title>{{ user.name }}</v-card-title>
-                            <v-card-text>
-                                {{ user.email }} <br>
-                                CPF: {{ user.cpf }}
-                            </v-card-text>
-                        </v-card>
-                    </v-col>
-                </v-row>
+    <textarea v-model="form.descricao" placeholder="Descrição"></textarea>
 
-                <v-pagination
-                    v-model="page"
-                    :length="totalPages"
-                    @update:modelValue="changePage"
-                    class="mt-4"
-                />
+    <button @click="createProduct">Salvar</button>
 
-            </div>
-
-            <!-- 🟢 DETALHE -->
-            <div v-else-if="view === 'detail'">
-
-                <v-btn @click="goBack" class="mb-4">Voltar</v-btn>
-
-                <v-progress-circular v-if="loading" indeterminate />
-
-                <v-alert v-else-if="error" type="error">
-                    {{ error }}
-                </v-alert>
-
-                <v-card v-else>
-                    <v-card-title>Produto: {{ product.nome }}</v-card-title>
-
-                    <v-card-text>
-                        Preço: {{ product.preco }} <br>
-                        Descrição: {{ product.descricao || 'Sem descrição' }}
-                    </v-card-text>
-
-                    <v-divider class="my-3"></v-divider>
-
-                    <v-card-title>Usuário</v-card-title>
-
-                    <v-card-text>
-                        Nome: {{ product.user.name }} <br>
-                        Email: {{ product.user.email }} <br>
-                        CPF: {{ product.user.cpf }}
-                    </v-card-text>
-                </v-card>
-
-            </div>
-
-            <!-- 🟣 CRIAR PRODUTO -->
-            <div v-else-if="view === 'create'">
-
-                <v-btn @click="goBack" class="mb-4">Voltar</v-btn>
-
-                <v-card class="pa-4">
-                    <v-card-title>Cadastrar Produto</v-card-title>
-
-                    <v-card-text>
-                        <v-text-field v-model="form.nome" label="Nome" />
-
-                        <v-text-field v-model="form.preco" label="Preço" type="number" />
-
-                        <!-- 🔥 SELECT DE USUÁRIOS -->
-                        <v-select
-                            :items="users"
-                            item-title="name"
-                            item-value="id"
-                            v-model="form.user_id"
-                            label="Usuário"
-                        />
-
-                        <v-textarea v-model="form.descricao" label="Descrição" />
-                    </v-card-text>
-
-                    <v-card-actions>
-                        <v-btn color="success" @click="createProduct">
-                            Salvar
-                        </v-btn>
-                    </v-card-actions>
-
-                    <v-alert v-if="error" type="error" class="mt-3">
-                        {{ error }}
-                    </v-alert>
-
-                    <v-alert v-if="success" type="success" class="mt-3">
-                        Produto cadastrado com sucesso!
-                    </v-alert>
-
-                </v-card>
-
-            </div>
-
-        </v-container>
-    </v-app>
+    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="success" class="success">Produto cadastrado com sucesso!</p>
 </div>
 
 <!-- Vue -->
@@ -141,11 +61,57 @@
 <!-- Axios -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-<!-- Vuetify -->
-<script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.0/dist/vuetify.min.js"></script>
+<script>
+const App = {
+    data() {
+        return {
+            form: {
+                nome: '',
+                preco: '',
+                user_id: '',
+                descricao: ''
+            },
+            error: null,
+            success: false
+        }
+    },
 
-<!-- App -->
-<script src="src/app.js"></script>
+    methods: {
+        async createProduct() {
+            this.error = null;
+            this.success = false;
+
+            try {
+                await axios.post('http://127.0.0.1:8000/api/produtos', {
+                    nome: this.form.nome,
+                    preco: parseFloat(this.form.preco),
+                    user_id: this.form.user_id,
+                    descricao: this.form.descricao
+                });
+
+                this.success = true;
+
+                this.form = {
+                    nome: '',
+                    preco: '',
+                    user_id: '',
+                    descricao: ''
+                };
+
+            } catch (err) {
+                console.error(err);
+                this.error = 'Erro ao cadastrar produto';
+            }
+        },
+
+        goBack() {
+            window.location.href = "index.html";
+        }
+    }
+};
+
+Vue.createApp(App).mount('#app');
+</script>
 
 </body>
 </html>
